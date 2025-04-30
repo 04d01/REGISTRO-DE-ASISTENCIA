@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Asistencia - Curso Virtual</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    .attendance-form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: gray;
+      cursor: not-allowed;
+    }
+    #attendance-list {
+      margin-top: 30px;
+    }
+    li {
+      background: #e0f7fa;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Control de Asistencia</h1>
+
+  <div class="attendance-form">
+    <input type="text" id="student-name" placeholder="Escribe tu nombre">
+    <button id="mark-btn" onclick="markAttendance()">Registrar Asistencia</button>
+    <button onclick="downloadExcel()">Descargar Reporte Excel</button>
+  </div>
+
+  <div id="attendance-list">
+    <h2>Lista de Asistencia:</h2>
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    let attendanceData = [];
+
+    function markAttendance() {
+      var nameInput = document.getElementById("student-name");
+      var name = nameInput.value.trim();
+
+      if (name === "") {
+        alert("Por favor, escribe tu nombre.");
+        return;
+      }
+
+      if (localStorage.getItem("attendanceMarked")) {
+        alert("Ya has registrado tu asistencia.");
+        return;
+      }
+
+      var now = new Date();
+      var time = now.toLocaleTimeString();
+      var list = document.getElementById("list");
+      var item = document.createElement("li");
+      item.textContent = name + " - " + time;
+      list.appendChild(item);
+
+      // Guardar en la lista de datos
+      attendanceData.push({ Nombre: name, Hora: time });
+
+      // Bloquear el registro doble
+      localStorage.setItem("attendanceMarked", "true");
+      document.getElementById("mark-btn").disabled = true;
+      nameInput.disabled = true;
+    }
+
+    function downloadExcel() {
+      if (attendanceData.length === 0) {
+        alert("No hay datos para descargar.");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(attendanceData);
+      XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+
+      XLSX.writeFile(wb, "reporte_asistencia.xlsx");
+    }
+
+    // Verificar si ya registró al cargar la página
+    window.onload = function() {
+      if (localStorage.getItem("attendanceMarked")) {
+        document.getElementById("mark-btn").disabled = true;
+        document.getElementById("student-name").disabled = true;
+      }
+    }
+  </script>
+
+</body>
+</html>
